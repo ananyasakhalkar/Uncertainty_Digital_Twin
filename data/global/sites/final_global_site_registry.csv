@@ -1,0 +1,26 @@
+site_id,crop,country,region,latitude,longitude,mapspam_center_harvested_area,mapspam_max_harvested_area_neighborhood,mapspam_mean_positive_area,mapspam_positive_fraction,crop_source,verification_status
+COTTON_AUS_01,Cotton,Australia,Oceania,-34.458333333305006,144.79166666659285,,2786.89990234375,,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+COTTON_03,Cotton,Brazil,South America,-16.6869,-49.2648,7.699999809265137,49.599998474121094,6.905785150271802,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+COTTON_01,Cotton,India,South Asia,17.385,78.4867,-3.402823466385289e+38,4949.7998046875,1417.1956453309758,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+COTTON_05,Cotton,Pakistan,South Asia,30.3753,69.3451,0.2000000029802322,52.0,6.363157915049477,0.3917525773195876,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+COTTON_02,Cotton,United States,North America,33.4484,-112.074,-3.402823466385289e+38,813.3026733398438,159.23550815208284,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+MAIZE_04,Maize,Argentina,South America,-31.4201,-64.1888,0.1000000014901161,5945.10009765625,2060.0866643880804,0.7352941176470589,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+MAIZE_02,Maize,Brazil,South America,-15.7939,-47.8828,127.3000030517578,2646.0,567.8247939525558,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+MAIZE_05,Maize,Mexico,North America,19.4326,-99.1332,6.099999904632568,3194.0,786.5458316229905,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+MAIZE_03,Maize,South Africa,Africa,-26.2041,28.0473,3.700000047683716,2757.199951171875,373.8327427153039,0.9658119658119658,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+MAIZE_01,Maize,United States,North America,41.878,-93.0977,1611.501220703125,3522.818603515625,1999.143173848302,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+RICE_01,Rice,India,South Asia,22.9868,87.855,9291.599609375,14201.7001953125,8690.950857018603,0.9586776859504132,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+RICE_03,Rice,Indonesia,Southeast Asia,-7.6145,110.7122,7408.5,18002.80078125,4209.228563606575,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+RICE_04,Rice,Philippines,Southeast Asia,15.4828,120.712,435.8999938964844,14997.7998046875,3426.234344140448,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+RICE_05,Rice,Thailand,Southeast Asia,15.87,100.9925,388.6000061035156,7349.2001953125,1702.0947780675865,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+RICE_02,Rice,Vietnam,Southeast Asia,10.0452,105.7469,12744.900390625,15530.599609375,10513.247116719396,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+SOY_03,Soybean,Argentina,South America,-32.8895,-60.651,0.0,9038.2998046875,3078.2901320361966,0.6228070175438597,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+SOY_02,Soybean,Brazil,South America,-16.6869,-49.2648,30.899999618530273,3648.60009765625,379.8413219353384,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+SOY_04,Soybean,China,East Asia,31.2304,121.4737,-3.402823466385289e+38,465.6000061035156,23.870512832147188,0.75,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+SOY_05,Soybean,India,South Asia,20.5937,78.9629,3394.60009765625,3552.89990234375,1473.8105224893804,0.957983193277311,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+SOY_01,Soybean,United States,North America,40.6331,-89.3985,1877.21630859375,3577.044921875,2041.8296170195272,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+WHEAT_05,Wheat,Argentina,South America,-35.0,-61.0,835.0999755859375,2165.0,931.4052171251049,0.950413223140496,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+WHEAT_04,Wheat,Australia,Oceania,-35.0,138.5,-3.402823466385289e+38,4676.7998046875,866.6971431106329,0.7142857142857143,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+WHEAT_03,Wheat,France,Europe,48.1173,2.156,270.0,1006.0999755859376,294.7280990978903,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+WHEAT_01,Wheat,India,South Asia,29.0588,76.0856,4966.7998046875,11543.900390625,5647.104459635417,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence
+WHEAT_US_01,Wheat,United States,North America,45.958333365363664,-101.95833339009089,,4115.220703125,,1.0,MapSPAM_2020_V2r2,crop_specific_spatial_evidence

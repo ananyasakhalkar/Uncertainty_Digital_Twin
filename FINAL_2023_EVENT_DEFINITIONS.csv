@@ -1,0 +1,7 @@
+definition,site_months,events,event_rate
+">=1 feature, any sensor",229,40,0.17467248908296942
+">=1 feature, cross-sensor",229,7,0.03056768558951965
+">=2 features, any sensor",229,23,0.10043668122270742
+">=2 features, cross-sensor",229,7,0.03056768558951965
+">=3 features, any sensor",229,6,0.026200873362445413
+">=3 features, cross-sensor",229,4,0.017467248908296942

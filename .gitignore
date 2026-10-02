@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Large/raw datasets
+dataverse_files/
+data/global/mapspam/
+*.tif
+*.tiff
+*.zip
+
+# Model checkpoints
+models/*.pt
+
+# Temporary/backup files
+*_backup.py
+*.tmp

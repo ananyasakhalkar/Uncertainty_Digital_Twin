@@ -1,0 +1,5 @@
+Sensor,Method,RMSE,RMSE_change_vs_baseline_%
+S2,Seasonal baseline,0.4726600875,0.0
+S2,Assimilating digital twin,0.49469805,4.662539334887253
+S1,Seasonal baseline,0.525874083,0.0
+S1,Assimilating digital twin,0.5962394,13.380639828945501

@@ -1,0 +1,21 @@
+site_id,crop,country,region,latitude,longitude
+WHEAT_01,Wheat,India,South Asia,28.6139,77.209
+WHEAT_02,Wheat,United States,North America,41.878,-93.0977
+WHEAT_03,Wheat,France,Europe,45.764,4.8357
+WHEAT_04,Wheat,Australia,Oceania,-34.9285,138.6007
+RICE_01,Rice,India,South Asia,22.5726,88.3639
+RICE_02,Rice,Vietnam,Southeast Asia,10.8231,106.6297
+RICE_03,Rice,Indonesia,Southeast Asia,-6.2088,106.8456
+RICE_04,Rice,Philippines,Southeast Asia,14.5995,120.9842
+MAIZE_01,Maize,United States,North America,42.3314,-93.6122
+MAIZE_02,Maize,Brazil,South America,-15.7939,-47.8828
+MAIZE_03,Maize,South Africa,Africa,-26.2041,28.0473
+MAIZE_04,Maize,Argentina,South America,-31.4201,-64.1888
+SOY_01,Soybean,United States,North America,40.6331,-89.3985
+SOY_02,Soybean,Brazil,South America,-16.6869,-49.2648
+SOY_03,Soybean,Argentina,South America,-32.8895,-60.651
+SOY_04,Soybean,China,East Asia,31.2304,121.4737
+COTTON_01,Cotton,India,South Asia,17.385,78.4867
+COTTON_02,Cotton,United States,North America,33.4484,-112.074
+COTTON_03,Cotton,Brazil,South America,-16.6869,-49.2648
+COTTON_04,Cotton,Australia,Oceania,-29.0136,134.754

@@ -1,0 +1,6 @@
+site_id,crop,country,region,latitude,longitude,verification_source
+MAIZE_US_01,Maize,United States,North America,41.88,-93.1,USDA_CDL_2023
+MAIZE_US_02,Maize,United States,North America,42.0308,-93.6319,USDA_CDL_2023
+MAIZE_US_03,Maize,United States,North America,40.6331,-89.3985,USDA_CDL_2023
+COTTON_US_01,Cotton,United States,North America,33.53122435619296,-102.02176391448941,USDA_CDL_2023
+COTTON_US_02,Cotton,United States,North America,35.87714173277247,-77.40965118754804,USDA_CDL_2023

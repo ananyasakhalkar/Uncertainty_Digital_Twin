@@ -1,0 +1,114 @@
+CROP DIGITAL TWIN
+FINAL EXPERIMENT SUMMARY
+========================
+
+DATA
+----
+Study period: 2019-01-01 to 2024-12-30
+Training period: 2019-01-01 to 2023-12-31
+Holdout period: 2024-01-01 to 2024-12-30
+
+Training observations:
+S1: 153
+S2: 177
+
+2024 holdout observations:
+S1: 27
+S2: 31
+
+MODEL
+-----
+Architecture:
+Crop-general latent state-space digital twin
+
+Inputs:
+- Sentinel-1
+- Sentinel-2
+- Daily weather
+
+State:
+Learned latent crop-condition state
+
+Assimilation:
+Ensemble Kalman Filter (EnKF)
+
+Evaluation:
+Observation-space RMSE
+
+2024 HOLDOUT RESULTS
+--------------------
+S2 seasonal baseline RMSE: 0.472660
+S2 free-running twin RMSE: 0.622287
+S2 assimilating twin RMSE: 0.494698
+
+S1 seasonal baseline RMSE: 0.525874
+S1 free-running twin RMSE: 0.603218
+S1 assimilating twin RMSE: 0.596239
+
+ASSIMILATION EFFECT
+-------------------
+S2 free-running -> assimilating:
+0.622287 -> 0.494698
+RMSE reduction: 20.5%
+
+S1 free-running -> assimilating:
+0.603218 -> 0.596239
+RMSE reduction: 1.16%
+
+BASELINE COMPARISON
+-------------------
+S2 assimilating twin vs seasonal baseline:
+4.66% higher RMSE
+
+S1 assimilating twin vs seasonal baseline:
+13.38% higher RMSE
+
+DEVIATION ANALYSIS
+------------------
+2024 S2 mean deviation: 2.2830
+2024 S2 95th percentile: 6.6466
+
+2024 S1 mean deviation: 2.6623
+2024 S1 95th percentile: 7.1988
+
+HISTORICAL CALIBRATION
+----------------------
+Calibration period: 2019-2023
+
+S2 calibration observations: 177
+S2 historical mean deviation: 3.1034
+S2 historical 95th percentile: 10.4791
+
+S1 calibration observations: 153
+S1 historical mean deviation: 3.4106
+S1 historical 95th percentile: 8.5521
+
+IMPORTANT INTERPRETATION
+------------------------
+Historical 95th-percentile deviation values are reference values only.
+They are NOT validated crop-stress thresholds.
+
+The current dataset contains no independent crop-stress labels,
+field measurements, LAI measurements, biomass measurements,
+or verified crop-history labels.
+
+Therefore the deviation signal is interpreted as
+observation-model disagreement, not validated crop stress.
+
+The crop value in the exported dataset should not be treated
+as verified ground truth crop identity.
+
+CURRENT SCIENTIFIC CLAIM
+------------------------
+The study demonstrates a sequential Sentinel-1/Sentinel-2/weather
+latent-state digital twin with EnKF-based data assimilation on a
+2024 temporal holdout.
+
+Assimilation reduces the free-running twin's S2 observation-space
+RMSE by approximately 20.5%.
+
+The assimilating twin does not outperform the seasonal baseline
+on overall 2024 RMSE.
+
+Stress detection is not claimed as validated in the current
+real-world dataset.

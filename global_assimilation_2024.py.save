@@ -1,0 +1,996 @@
+«import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+
+
+# =========================================================
+# CONFIG
+# =========================================================
+
+DATA_FILE = "GLOBAL_ALL25_MODEL_READY.csv"
+MODEL_FILE = "models/GLOBAL_5CROP_TEMPORAL_TWIN.pt"
+
+N_ENSEMBLE = 50
+
+PROCESS_NOISE = 0.05
+OBS_NOISE = 0.15
+
+STATE_FEATURES = [
+    "NDVI",
+    "EVI",
+    "NDWI",
+    "VV",
+    "VH",
+    "VV_VH"
+]
+
+S2_FEATURES = [
+    "NDVI",
+    "EVI",
+    "NDWI"
+]
+
+S1_FEATURES = [
+    "VV",
+    "VH",
+    "VV_VH"
+]
+
+WEATHER_FEATURES = [
+    "temperature_C",
+    "precipitation_mm",
+    "solar_MJ_m2"
+]
+
+CROP_TO_ID = {
+    "Cotton": 0,
+    "Maize": 1,
+    "Rice": 2,
+    "Soybean": 3,
+    "Wheat": 4
+}
+
+
+# =========================================================
+# DEVICE
+# =========================================================
+
+if torch.backends.mps.is_available():
+    DEVICE = torch.device("mps")
+else:
+    DEVICE = torch.device("cpu")
+
+print("DEVICE:", DEVICE)
+
+
+# =========================================================
+# LOAD DATA
+# =========================================================
+
+data = pd.read_csv(
+    DATA_FILE,
+    parse_dates=["date"]
+)
+
+data = data.sort_values(
+    ["site_id", "date"]
+).reset_index(drop=True)
+
+
+# =========================================================
+# MODEL ARCHITECTURE
+# IMPORTANT:
+# The trained checkpoint uses "transition", not "net".
+# =========================================================
+
+class TransitionModel(nn.Module):
+
+    def __init__(
+        self,
+        state_dim=6,
+        weather_dim=3,
+        n_crops=5,
+        crop_embedding_dim=4,
+        hidden_dim=32
+    ):
+
+        super().__init__()
+
+        self.crop_embedding = nn.Embedding(
+            n_crops,
+            crop_embedding_dim
+        )
+
+        self.transition = nn.Sequential(
+
+            nn.Linear(
+                state_dim +
+                weather_dim +
+                crop_embedding_dim,
+                hidden_dim
+            ),
+
+            nn.ReLU(),
+
+            nn.Linear(
+                hidden_dim,
+                hidden_dim
+            ),
+
+            nn.ReLU(),
+
+            nn.Linear(
+                hidden_dim,
+                state_dim
+            )
+        )
+
+    def forward(
+        self,
+        state,
+        weather,
+        crop_id
+    ):
+
+        crop_emb = self.crop_embedding(
+            crop_id
+        )
+
+        x = torch.cat(
+            [
+                state,
+                weather,
+                crop_emb
+            ],
+            dim=1
+        )
+
+        delta = self.transition(x)
+
+        return (
+            state +
+            0.10 *
+            torch.tanh(delta)
+        )
+
+
+# =========================================================
+# LOAD TRAINED MODEL
+# =========================================================
+
+checkpoint = torch.load(
+    MODEL_FILE,
+    map_location=DEVICE,
+    weights_only=False
+)
+
+model = TransitionModel(
+    state_dim=6,
+    weather_dim=3,
+    n_crops=5,
+    crop_embedding_dim=4,
+    hidden_dim=32
+).to(DEVICE)
+
+model.load_state_dict(
+    checkpoint["model_state_dict"]
+)
+
+model.eval()
+
+
+# =========================================================
+# LOAD TRAINING STANDARDIZATION
+# =========================================================
+
+state_mean = torch.tensor(
+    checkpoint["state_mean"],
+    dtype=torch.float32,
+    device=DEVICE
+)
+
+state_std = torch.tensor(
+    checkpoint["state_std"],
+    dtype=torch.float32,
+    device=DEVICE
+)
+
+weather_mean = torch.tensor(
+    checkpoint["weather_mean"],
+    dtype=torch.float32,
+    device=DEVICE
+)
+
+weather_std = torch.tensor(
+    checkpoint["weather_std"],
+    dtype=torch.float32,
+    device=DEVICE
+)
+
+
+# =========================================================
+# TRANSITION FUNCTION
+# =========================================================
+
+def transition_state(
+    state,
+    weather,
+    crop_id
+):
+
+    state_tensor = torch.tensor(
+        state,
+        dtype=torch.float32,
+        device=DEVICE
+    )
+
+    weather_tensor = torch.tensor(
+        weather,
+        dtype=torch.float32,
+        device=DEVICE
+    )
+
+    crop_tensor = torch.full(
+        (state_tensor.shape[0],),
+        crop_id,
+        dtype=torch.long,
+        device=DEVICE
+    )
+
+    state_norm = (
+        state_tensor -
+        state_mean
+    ) / state_std
+
+    weather_norm = (
+        weather_tensor -
+        weather_mean
+    ) / weather_std
+
+    with torch.no_grad():
+
+        next_norm = model(
+            state_norm,
+            weather_norm,
+            crop_tensor
+        )
+
+    next_state = (
+        next_norm *
+        state_std
+        +
+        state_mean
+    )
+
+    return (
+        next_state
+        .detach()
+        .cpu()
+        .numpy()
+    )
+
+
+# =========================================================
+# INITIALIZE 2024 STATE
+# =========================================================
+
+def initialize_2024_state(group):
+
+    group = group.sort_values(
+        "date"
+    ).reset_index(drop=True)
+
+    pre = group[
+        group["date"] <
+        pd.Timestamp("2024-01-01")
+    ].copy()
+
+    if len(pre) == 0:
+        return None
+
+    crop = pre["crop"].iloc[0]
+
+    crop_id = CROP_TO_ID[crop]
+
+    # -----------------------------------------------------
+    # Find latest complete satellite state before 2024.
+    # -----------------------------------------------------
+
+    complete = pre[
+        pre[STATE_FEATURES]
+        .notna()
+        .all(axis=1)
+    ].copy()
+
+    if len(complete) == 0:
+        return None
+
+    start_row = complete.iloc[-1]
+
+    state = start_row[
+        STATE_FEATURES
+    ].to_numpy(
+        dtype=np.float32
+    )
+
+    current_date = start_row["date"]
+
+    # -----------------------------------------------------
+    # Propagate from last complete state to Dec 2023.
+    # -----------------------------------------------------
+
+    while current_date < pd.Timestamp(
+        "2023-12-01"
+    ):
+
+        next_date = (
+            current_date +
+            pd.DateOffset(months=1)
+        )
+
+        row = pre[
+            pre["date"] == next_date
+        ]
+
+        if len(row) == 0:
+            return None
+
+        row = row.iloc[0]
+
+        if row[
+            WEATHER_FEATURES
+        ].isna().any():
+
+            return None
+
+        weather = row[
+            WEATHER_FEATURES
+        ].to_numpy(
+            dtype=np.float32
+        )
+
+        state = transition_state(
+            state[None, :],
+            weather[None, :],
+            crop_id
+        )[0]
+
+        current_date = next_date
+
+    # -----------------------------------------------------
+    # December 2023 hybrid initialization.
+    #
+    # Observed S2 replaces propagated S2.
+    # Observed S1 replaces propagated S1 when available.
+    # -----------------------------------------------------
+
+    dec = pre[
+        pre["date"] ==
+        pd.Timestamp("2023-12-01")
+    ]
+
+    if len(dec) == 0:
+        return None
+
+    dec = dec.iloc[0]
+
+    # S2
+    for j, feature in enumerate(
+        S2_FEATURES
+    ):
+
+        if pd.notna(dec[feature]):
+
+            state[j] = float(
+                dec[feature]
+            )
+
+    # S1
+    for j, feature in enumerate(
+        S1_FEATURES
+    ):
+
+        if pd.notna(dec[feature]):
+
+            state[3 + j] = float(
+                dec[feature]
+            )
+
+    if np.isnan(state).any():
+        return None
+
+    return state
+
+
+# =========================================================
+# ENKF UPDATE
+# =========================================================
+
+def assimilate(
+    ensemble,
+    observation,
+    indices
+):
+
+    ensemble = ensemble.astype(
+        np.float32
+    )
+
+    observation = np.asarray(
+        observation,
+        dtype=np.float32
+    )
+
+    indices = np.asarray(
+        indices,
+        dtype=int
+    )
+
+    X = ensemble[:, indices]
+
+    y = observation
+
+    # -----------------------------------------------------
+    # Ensemble mean
+    # -----------------------------------------------------
+
+    x_mean = X.mean(
+        axis=0
+    )
+
+    # -----------------------------------------------------
+    # Ensemble anomalies
+    # -----------------------------------------------------
+
+    A = (
+        X -
+        x_mean
+    )
+
+    # -----------------------------------------------------
+    # Ensemble covariance
+    # -----------------------------------------------------
+
+    P = (
+        A.T @ A
+    ) / (
+        N_ENSEMBLE - 1
+    )
+
+    # -----------------------------------------------------
+    # Observation covariance
+    # -----------------------------------------------------
+
+    R = (
+        OBS_NOISE ** 2
+    ) * np.eye(
+        len(indices),
+        dtype=np.float32
+    )
+
+    # -----------------------------------------------------
+    # Kalman gain
+    # -----------------------------------------------------
+
+    S = P + R
+
+    try:
+
+        K = (
+            P @
+            np.linalg.inv(S)
+        )
+
+    except np.linalg.LinAlgError:
+
+        K = (
+            P @
+            np.linalg.pinv(S)
+        )
+
+    # -----------------------------------------------------
+    # Perturbed observations
+    # -----------------------------------------------------
+
+    obs_noise = np.random.normal(
+        0,
+        OBS_NOISE,
+        size=(
+            N_ENSEMBLE,
+            len(indices)
+        )
+    ).astype(
+        np.float32
+    )
+
+    perturbed_obs = (
+        y[None, :] +
+        obs_noise
+    )
+
+    # -----------------------------------------------------
+    # EnKF update
+    # -----------------------------------------------------
+
+    innovations = (
+        perturbed_obs -
+        X
+    )
+
+    X_updated = (
+        X +
+        innovations @ K.T
+    )
+
+    ensemble[:, indices] = (
+        X_updated
+    )
+
+    return ensemble
+
+
+# =========================================================
+# RUN ONE ASSIMILATION MODE
+# =========================================================
+
+def run_mode(
+    mode,
+    data
+):
+
+    results = []
+
+    for site_id, group in data.groupby(
+        "site_id"
+    ):
+
+        group = group.sort_values(
+            "date"
+        ).reset_index(drop=True)
+
+        initial_state = (
+            initialize_2024_state(
+                group
+            )
+        )
+
+        if initial_state is None:
+            continue
+
+        crop = group[
+            "crop"
+        ].iloc[0]
+
+        crop_id = CROP_TO_ID[
+            crop
+        ]
+
+        # -------------------------------------------------
+        # Initial ensemble
+        # -------------------------------------------------
+
+        ensemble = (
+            initial_state[None, :]
+            +
+            np.random.normal(
+                0,
+                PROCESS_NOISE,
+                size=(
+                    N_ENSEMBLE,
+                    len(STATE_FEATURES)
+                )
+            )
+        ).astype(
+            np.float32
+        )
+
+        # -------------------------------------------------
+        # 2024 test period
+        # -------------------------------------------------
+
+        test = group[
+            (
+                group["date"] >=
+                pd.Timestamp("2024-01-01")
+            )
+            &
+            (
+                group["date"] <=
+                pd.Timestamp("2024-10-01")
+            )
+        ].copy()
+
+        previous_date = pd.Timestamp(
+            "2023-12-01"
+        )
+
+        # -------------------------------------------------
+        # MONTHLY LOOP
+        # -------------------------------------------------
+
+        for _, row in test.iterrows():
+
+            current_date = row[
+                "date"
+            ]
+
+            expected_date = (
+                previous_date +
+                pd.DateOffset(months=1)
+            )
+
+            # -------------------------------------------------
+            # Require true monthly continuity.
+            # -------------------------------------------------
+
+            if current_date != expected_date:
+
+                previous_date = current_date
+
+                continue
+
+            # -------------------------------------------------
+            # Weather must be available.
+            # -------------------------------------------------
+
+            if row[
+                WEATHER_FEATURES
+            ].isna().any():
+
+                previous_date = current_date
+
+                continue
+
+            weather = row[
+                WEATHER_FEATURES
+            ].to_numpy(
+                dtype=np.float32
+            )
+
+            # =================================================
+            # FORECAST
+            # =================================================
+
+            forecast = transition_state(
+                ensemble,
+                np.repeat(
+                    weather[None, :],
+                    N_ENSEMBLE,
+                    axis=0
+                ),
+                crop_id
+            )
+
+            forecast += np.random.normal(
+                0,
+                PROCESS_NOISE,
+                size=forecast.shape
+            ).astype(
+                np.float32
+            )
+
+            # =================================================
+            # SCORE PRIOR
+            #
+            # Each observed feature is scored independently.
+            # Missing S1 does not discard available S2.
+            # =================================================
+
+            prior_mean = (
+                forecast.mean(
+                    axis=0
+                )
+            )
+
+            for j, feature in enumerate(
+                STATE_FEATURES
+            ):
+
+                if pd.notna(
+                    row[feature]
+                ):
+
+                    observed = float(
+                        row[feature]
+                    )
+
+                    error = (
+                        prior_mean[j] -
+                        observed
+                    )
+
+                    results.append(
+                        {
+                            "site_id":
+                                site_id,
+
+                            "crop":
+                                crop,
+
+                            "country":
+                                row["country"],
+
+                            "date":
+                                current_date,
+
+                            "mode":
+                                mode,
+
+                            "feature":
+                                feature,
+
+                            "prediction":
+                                prior_mean[j],
+
+                            "observation":
+                                observed,
+
+                            "squared_error":
+                                error ** 2
+                        }
+                    )
+
+            # =================================================
+            # S2 ASSIMILATION
+            # =================================================
+
+            if mode in [
+                "S2_only",
+                "S1_plus_S2"
+            ]:
+
+                if row[
+                    "S2_available"
+                ] == 1:
+
+                    obs = row[
+                        S2_FEATURES
+                    ].to_numpy(
+                        dtype=np.float32
+                    )
+
+                    if not np.isnan(
+                        obs
+                    ).any():
+
+                        forecast = assimilate(
+                            forecast,
+                            obs,
+                            [0, 1, 2]
+                        )
+
+            # =================================================
+            # S1 ASSIMILATION
+            # =================================================
+
+            if mode in [
+                "S1_only",
+                "S1_plus_S2"
+            ]:
+
+                if row[
+                    "S1_available"
+                ] == 1:
+
+                    obs = row[
+                        S1_FEATURES
+                    ].to_numpy(
+                        dtype=np.float32
+                    )
+
+                    if not np.isnan(
+                        obs
+                    ).any():
+
+                        forecast = assimilate(
+                            forecast,
+                            obs,
+                            [3, 4, 5]
+                        )
+
+            # -------------------------------------------------
+            # Posterior becomes next month's ensemble.
+            # -------------------------------------------------
+
+            ensemble = forecast
+
+            previous_date = current_date
+
+    return results
+
+
+# =========================================================
+# RUN ALL MODES
+# =========================================================
+
+all_results = []
+
+modes = [
+    "free_running",
+    "S1_only",
+    "S2_only",
+    "S1_plus_S2"
+]
+
+for mode in modes:
+
+    print(
+        "\nRunning:",
+        mode
+    )
+
+    mode_results = run_mode(
+        mode,
+        data
+    )
+
+    print(
+        "Results:",
+        len(mode_results)
+    )
+
+    all_results.extend(
+        mode_results
+    )
+
+
+# =========================================================
+# RESULTS DATAFRAME
+# =========================================================
+
+results_df = pd.DataFrame(
+    all_results
+)
+
+
+# =========================================================
+# RMSE SUMMARY
+# =========================================================
+
+summary_rows = []
+
+for (
+    mode,
+    feature
+), group in results_df.groupby(
+    ["mode", "feature"]
+):
+
+    rmse = np.sqrt(
+        group[
+            "squared_error"
+        ].mean()
+    )
+
+    summary_rows.append(
+        {
+            "mode":
+                mode,
+
+            "feature":
+                feature,
+
+            "RMSE":
+                rmse,
+
+            "N":
+                len(group)
+        }
+    )
+
+
+summary = pd.DataFrame(
+    summary_rows
+)
+
+
+# =========================================================
+# MEAN RMSE PER MODE
+# =========================================================
+
+mean_rmse = (
+    summary
+    .groupby("mode")["RMSE"]
+    .mean()
+    .rename("Mean_RMSE")
+    .reset_index()
+)
+
+summary = summary.merge(
+    mean_rmse,
+    on="mode",
+    how="left"
+)
+
+
+# =========================================================
+# PRINT SUMMARY
+# =========================================================
+
+print(
+    "\n========================================"
+)
+
+print(
+    "GLOBAL 2024 ASSIMILATION V3"
+)
+
+print(
+    "========================================\n"
+)
+
+print(
+    summary.sort_values(
+        ["mode", "feature"]
+    ).to_string(
+        index=False
+    )
+)
+
+
+# =========================================================
+# EVALUATION COVERAGE
+# =========================================================
+
+evaluation_sites = (
+    results_df[
+        "site_id"
+    ].nunique()
+)
+
+evaluation_site_months = (
+    results_df[
+        [
+            "site_id",
+            "date"
+        ]
+    ]
+    .drop_duplicates()
+    .shape[0]
+)
+
+print(
+    "\nEvaluation sites:",
+    evaluation_sites
+)
+
+print(
+    "Evaluation site-months:",
+    evaluation_site_months
+)
+
+
+# =========================================================
+# SAVE RESULTS
+# =========================================================
+
+results_file = (
+    "GLOBAL_2024_ASSIMILATION_RESULTS_V3.csv"
+)
+
+summary_file = (
+    "GLOBAL_2024_ASSIMILATION_SUMMARY_V3.csv"
+)
+
+results_df.to_csv(
+    results_file,
+    index=False
+)
+
+summary.to_csv(
+    summary_file,
+    index=False
+)
+
+print(
+    "\nSaved:"
+)
+
+print(
+    results_file
+)
+
+print(
+    summary_file
+)

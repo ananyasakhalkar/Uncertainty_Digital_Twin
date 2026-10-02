@@ -1,0 +1,3 @@
+site_id,crop,country,date,high_feature_count,mean_score,max_score,mean_deviation,multi_feature_event,previous_event,consecutive_month_event
+WHEAT_AU_04,Wheat,Australia,2024-05-01,3,3.6154602466693984,10.24398382846766,0.9806571464479635,True,True,True
+WHEAT_AU_04,Wheat,Australia,2024-06-01,2,3.893878162331907,7.989666610822183,0.8703844777930941,True,True,True

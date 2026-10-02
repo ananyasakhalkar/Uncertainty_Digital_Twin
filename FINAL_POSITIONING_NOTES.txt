@@ -1,0 +1,54 @@
+FINAL RESEARCH POSITIONING
+===========================
+
+1. SEASONAL BASELINE
+Single-site 2024 holdout:
+S2 free-running RMSE: 0.622287
+S2 assimilated RMSE: 0.494698
+S2 reduction: 20.5%
+
+S1 free-running RMSE: 0.603218
+S1 assimilated RMSE: 0.596239
+S1 reduction: 1.2%
+
+Seasonal baseline:
+S2 RMSE: 0.472660
+S1 RMSE: 0.525874
+
+Interpretation:
+The assimilated digital twin improves upon its own free-running forecast,
+but does not outperform the seasonal baseline in the single-site experiment.
+Do NOT claim universal baseline superiority.
+
+2. GLOBAL ASSIMILATION
+S1-only improvement vs free-running: 15.07%
+S2-only improvement vs free-running: 0.87%
+S1+S2 improvement vs free-running: 16.00%
+
+Interpretation:
+The main contribution is sequential state correction through assimilation,
+not universal superiority over a simple seasonal benchmark.
+
+3. UNCERTAINTY
+Overall spread-error Pearson correlation: r = 0.217
+
+1-sigma empirical coverage: 27.89%
+90% interval empirical coverage: 40.50%
+2-sigma empirical coverage: 44.95%
+
+Interpretation:
+Ensemble dispersion is an informative but imperfect relative uncertainty
+signal. It is NOT calibrated probabilistic uncertainty.
+
+Manuscript wording:
+"Ensemble dispersion provided an informative but imperfect indicator of
+predictive uncertainty. Forecast spread showed a modest positive association
+with absolute error (Pearson r = 0.217), and observations in the highest-spread
+quartile exhibited substantially larger mean absolute errors than those in the
+lowest-spread quartile. However, empirical interval coverage was substantially
+below nominal coverage, indicating that the current ensemble uncertainty is
+not calibrated. We therefore interpret ensemble spread as a relative
+uncertainty signal rather than a calibrated probabilistic interval."
+
+Future work:
+Calibrate uncertainty using out-of-sample calibration or conformal prediction.

@@ -1,0 +1,25 @@
+Experiment,Metric,Value,Units
+Dataset,Site-month records,1750,records
+Dataset,Sites,25,sites
+Dataset,Crops,5,crops
+Dataset,Countries,14,countries
+Dataset,Complete multimodal records,89.83,%
+Temporal prediction,2024 EVI RMSE,0.56637,standardized observation units
+Temporal prediction,2024 NDVI RMSE,0.490082,standardized observation units
+Temporal prediction,2024 NDWI RMSE,0.496894,standardized observation units
+Temporal prediction,2024 VH RMSE,0.640204,standardized observation units
+Temporal prediction,2024 VV RMSE,0.467636,standardized observation units
+Temporal prediction,2024 VV/VH RMSE,0.784678,standardized observation units
+Temporal prediction,2024 mean RMSE,0.584825,mean across six variables
+Spatial generalization,Held-out sites,5,sites
+Spatial generalization,Held-out site RMSE,1.993548,observation-space RMSE
+Latent assimilation,Free-running RMSE,0.580016,observation-space mean RMSE
+Latent assimilation,S1-only RMSE,0.581022,observation-space mean RMSE
+Latent assimilation,S2-only RMSE,0.580894,observation-space mean RMSE
+Latent assimilation,S1+S2 RMSE,0.580304,observation-space mean RMSE
+Uncertainty,Spread-error Pearson correlation,0.11672,r
+Deviation analysis,2024 evaluated feature-months,1218,feature-months
+Deviation analysis,Multi-sensor deviation site-months,17,site-months
+Deviation analysis,Sites with multi-sensor events,9,sites
+Deviation analysis,Persistent consecutive multi-sensor months,2,site-months
+Deviation analysis,Persistent event site,WHEAT_AU_04,
